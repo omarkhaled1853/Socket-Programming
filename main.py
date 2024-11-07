@@ -1,8 +1,9 @@
 import sys
 import server
 
-# get port number from arguments input
-port = int(sys.argv[2]) # server port number
+if __name__ == "__main__":
+    # get port number from arguments input
+    port = int(sys.argv[1]) # server port number
 
-# run server
-server.run_server(port=port)
+    # run server
+    server.run_server(port=port)

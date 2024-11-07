@@ -2,13 +2,20 @@ import socket
 import threading
 import os
 
-# function to handel client GET request
-def handle_POST():
-    pass
+# Function to handle client POST request
+def handle_POST(path: str, data: str):
+    file_path = path.lstrip("/")  # Remove leading "/"
+    os.makedirs(file_path, exist_ok=True)  # Ensure directory exists
+    with open(file_path + "/file.txt", "w") as f:
+        # Write data into the file
+        f.write(data)
+    # Send 200 OK response
+    response = "HTTP/1.1 200 OK\r\n"
+    return response.encode()
 
-# function to handel client GET request
+# Function to handle client GET request
 def handle_GET(path: str):
-    file_path = path.lstrip("/")  # Remove leading "/"            
+    file_path = path.lstrip("/")  # Remove leading "/"
     # Check if the file exists
     if os.path.exists(file_path) and os.path.isfile(file_path):
         # Read the file content
@@ -25,26 +32,27 @@ def handle_GET(path: str):
 
 def handle_client(client_socket: socket.socket, addr:tuple):
     try:
-        while True:
-            # recive and print client messages
-            request = client_socket.recv(1024).decode("utf-8")
-            
-            print(f"Recieved: {request}")
-            
-            # get request command
-            lines = request.splitlines()
-            request_line = lines[0]
-            method, path, _ = request_line.split()
-            
-            response = ''
-            # handle GET request
-            if method == "GET":
-                response = handle_GET(path=path)
-            elif method == "POST":
-                response = handle_POST()
-
-            # send response to client
-            client_socket.send(response.encode("utf-8"))
+        # Receive client messages
+        request = client_socket.recv(1024).decode("utf-8")
+        
+        print(f"Received: {request}")
+        
+        # Get request command
+        lines = request.splitlines()
+        request_line = lines[0]
+        method, path, _ = request_line.split()
+        
+        # Get data if the method is POST
+        data = lines[-1]
+        
+        # Handle GET and POST requests
+        if method == "GET":
+            response = handle_GET(path=path)
+        elif method == "POST":
+            response = handle_POST(path=path, data=data)
+        
+        # Send response to client
+        client_socket.send(response)
     except Exception as e:
         print(f"Error when handling client: {e}")
     finally:
