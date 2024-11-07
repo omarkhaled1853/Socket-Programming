@@ -57,37 +57,36 @@ def create_http_get_request(filepath, host):
 
 
 def main(input_file, host, port):
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client_socket.connect((host, port))
+    # Use 'with' to automatically handle the socket closing
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
+        client_socket.connect((host, port))
 
-    with open(input_file, "r") as file:
-        for line in file:
-            operation, file_path, _, _, body = split_command(line)
+        with open(input_file, "r") as file:
+            for line in file:
+                operation, file_path, _, _, body = split_command(line)
 
-            if operation == "client_get":
-                request = create_http_get_request(file_path, host)
-            elif operation == "client_post":
-                request = create_http_post_request(file_path, body, host)
+                if operation == "client_get":
+                    request = create_http_get_request(file_path, host)
+                elif operation == "client_post":
+                    request = create_http_post_request(file_path, body, host)
 
-            client_socket.sendall(request.encode())
+                client_socket.sendall(request.encode())
 
-            response = receive_response(client_socket)
+                response = receive_response(client_socket)
 
-            if operation == "client_get":
-                print("Response from Get request: ", response.decode())
-                filename = os.path.basename(file_path)
-                save_file(filename, response)
+                if operation == "client_get":
+                    print("Response from Get request: ", response.decode())
+                    filename = os.path.basename(file_path)
+                    save_file(filename, response)
 
-            elif operation == "client_post":
-                print("Response from post request:", response.decode())
-
-    client_socket.close()
+                elif operation == "client_post":
+                    print("Response from post request:", response.decode())
 
 
 if __name__ == "__main__":
     # print(sys.argv[0])
     server_ip = sys.argv[1]
-    port_number = sys.argv[2]
+    port_number = int(sys.argv[2])
 
     # print(server_ip)
     # print(port_number)
