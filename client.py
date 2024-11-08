@@ -1,18 +1,7 @@
 import socket
 import os
 import sys
-
-
-def receive_response(socket):
-    response = b""
-
-    while True:
-        data = socket.recv(1024)
-        if not data:
-            break
-        response += data
-
-    return response
+import mimetypes
 
 
 def save_file(filename, content):
@@ -34,53 +23,93 @@ def split_command(command):
     if len(parts) == 4:
         port = int(parts[3])
 
-    body = ""
-    if operation == "client_post":
-        body = " ".join(parts[4:])
-
-    return operation, file_path, host, port, body
+    return operation, file_path, host, port
 
 
-def create_http_post_request(filepath, body, host):
-    request = (f"POST {filepath} HTTP/1.1\r\n"
-               f"Host: {host}\r\n"
-               f"Content-Length: {len(body)}\r\n"
-               f"Content-Type: application/x-www-form-urlencoded\r\n\r\n"
-               f"{body}")
+def get_content_type_from_path(file_path):
+    mime_type, encoding = mimetypes.guess_type(file_path)
 
-    return request
+    if mime_type:
+        return mime_type
+    else:
+        return "unknown/unknown"
+
+
+def read_file(file_path):
+    """Read the content of a text file and return it as a string."""
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            content = file.read()  # Read the entire file content as a string
+        return content
+    except Exception as e:
+        print(f"Error reading file: {e}")
+        return None
+
+
+def read_binary_file(file_path):
+    """Read the content of a binary file and return it as bytes."""
+    try:
+        with open(file_path, 'rb') as file:
+            content = file.read()  # Read the entire file content as bytes
+        return content
+    except Exception as e:
+        print(f"Error reading file: {e}")
+        return None
 
 
 def create_http_get_request(filepath, host):
     request = f"GET {filepath} HTTP/1.1\r\nHost: {host}\r\n\r\n"
-    return request
+    return request.encode()
+
+
+def create_http_post_request(file_path, host):
+    content_type = get_content_type_from_path(file_path)
+    print(content_type)
+    if content_type == "unknown/unknown":
+        raise ValueError("Invalid content type.")
+
+    if content_type[: 5] == "image":
+        body = read_binary_file(file_path)
+    elif content_type[: 4] == "text":
+        body = read_file(file_path).encode()
+    else:
+        raise ValueError("Invalid content type.")
+
+    headers = (f"POST {file_path} HTTP/1.1\r\n"
+               f"Host: {host}\r\n"
+               f"Content-Length: {len(body)}\r\n"
+               f"Content-Type: {content_type}\r\n\r\n")
+
+    return headers.encode() + body
 
 
 def main(input_file, host, port):
     # Use 'with' to automatically handle the socket closing
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
-        client_socket.connect((host, port))
 
-        with open(input_file, "r") as file:
-            for line in file:
-                operation, file_path, _, _, body = split_command(line)
+    # with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
+    #     client_socket.connect((host, port))
 
-                if operation == "client_get":
-                    request = create_http_get_request(file_path, host)
-                elif operation == "client_post":
-                    request = create_http_post_request(file_path, body, host)
+    with open(input_file, "r") as file:
+        for line in file:
+            operation, file_path, _, _ = split_command(line)
 
-                client_socket.sendall(request.encode())
+            if operation == "client_get":
+                request = create_http_get_request(file_path, host)
+            elif operation == "client_post":
+                request = create_http_post_request(file_path, host)
 
-                response = receive_response(client_socket)
+            print(request)
 
-                if operation == "client_get":
-                    print("Response from Get request: ", response.decode())
-                    filename = os.path.basename(file_path)
-                    save_file(filename, response)
-
-                elif operation == "client_post":
-                    print("Response from post request:", response.decode())
+            # client_socket.sendall(request)
+            # response = client_socket.recv(1048576)
+            #
+            # if operation == "client_get":
+            #     # print("Response from Get request: ", response.decode())
+            #     filename = os.path.basename(file_path)
+            #     save_file(filename, response)
+            #
+            # elif operation == "client_post":
+            #     print("Response from post request:", response.decode())
 
 
 if __name__ == "__main__":
