@@ -13,7 +13,7 @@ def handle_POST(path: str, data: str):
         # Write data into the file
         f.write(data)
     # Send 200 OK response
-    response = "HTTP/1.1 200 OK\r\n"
+    response = "HTTP/1.1 200 OK\r\n\r\n"
     return response.encode()
 
 # Function to handle client GET request
