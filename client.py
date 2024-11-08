@@ -34,7 +34,6 @@ def get_content_type_from_path(file_path):
 
 
 def read_file(file_path):
-    """Read the content of a text file and return it as a string."""
     try:
         with open(file_path, 'r', encoding='utf-8') as file:
             content = file.read()  # Read the entire file content as a string
@@ -45,7 +44,6 @@ def read_file(file_path):
 
 
 def read_binary_file(file_path):
-    """Read the content of a binary file and return it as bytes."""
     try:
         with open(file_path, 'rb') as file:
             content = file.read()  # Read the entire file content as bytes
@@ -80,39 +78,49 @@ def create_http_post_request(file_path, host):
     return headers.encode() + body
 
 
-def main(input_file, host, port):
-    # Use 'with' to automatically handle the socket closing
+def client_logic(client_socket, input_file, host):
+    with open(input_file, "r") as file:
+        for line in file:
+            operation, file_path, _, _ = split_command(line)
+
+            if operation == "client_get":
+                request = create_http_get_request(file_path, host)
+            elif operation == "client_post":
+                request = create_http_post_request(file_path, host)
+
+            client_socket.sendall(request)
+
+            response = client_socket.recv(1048576)
+
+            headers, body = response.split(b"\r\n", 1)
+            headers = headers.decode('utf-8')
+
+            if operation == "client_get":
+                print("Headers:\n", headers)
+                print("Body:\n", body)
+                save_file(file_path, body)
+
+            elif operation == "client_post":
+                print("Headers:\n", headers)
+
+
+def main(host, port):
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
         client_socket.connect((host, port))
 
-        with open(input_file, "r") as file:
-            for line in file:
-                operation, file_path, _, _ = split_command(line)
+        while True:
+            input_file = input("Please enter command file or exit to close connection: ")
 
-                if operation == "client_get":
-                    request = create_http_get_request(file_path, host)
-                elif operation == "client_post":
-                    request = create_http_post_request(file_path, host)
+            if input_file == "exit":
+                break
 
-                client_socket.sendall(request)
+            client_logic(client_socket, input_file, host)
 
-                response = client_socket.recv(1048576)
-
-                headers, body = response.split(b"\r\n", 1)
-                headers = headers.decode('utf-8')
-
-                if operation == "client_get":
-                    print("Headers:\n", headers)
-                    print("Body:\n", body)
-                    save_file(file_path, body)
-
-                elif operation == "client_post":
-                    print("Headers:\n", headers)
 
 if __name__ == "__main__":
     server_ip = sys.argv[1]
     port_number = int(sys.argv[2])
 
-    input_file = "commands.txt"
-    main(input_file, server_ip, port_number)
+    # input_file = "commands.txt"
+    main(server_ip, port_number)

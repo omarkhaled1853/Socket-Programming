@@ -45,13 +45,15 @@ def handle_GET(path: str):
         response = "HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n"
         return response.encode()
 
+
 def handle_client(client_socket: socket.socket, addr:tuple):
     try:
+
         while True:
             # Receive client messages
             request = client_socket.recv(1048576)
 
-            # Indecate close lient socket
+            # Indicate close listen socket
             if not request:
                 break
 
@@ -82,20 +84,23 @@ def handle_client(client_socket: socket.socket, addr:tuple):
         client_socket.close()
         print(f"Connection to client ({addr[0]}:{addr[1]}) closed")
 
-def run_server(port = 8000):
-    server_ip = "127.0.0.1" # default server's IP address
-    # creat a socket object
+
+def run_server(port =8000):  # default server port
+    server_ip = "127.0.0.1"  # default server's IP address
+    # create a socket object
     try:
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # bind the socket to the host and port
         server.bind((server_ip, port))
-        # listen for incomming connection
+        # listen for incoming connection
         server.listen()
         print(f"Listing on {server_ip}:{port}")
 
         while True:
             # accept a client connection
             client_socket, addr = server.accept()
+            client_socket.settimeout(10)
+
             print(f"Accepted connection from {addr[0]}:{addr[1]}")
             # start a new thread to handle the client
             # handle client function with client socket and client address
@@ -105,6 +110,7 @@ def run_server(port = 8000):
         print(f"Error: {e}")
     finally:
         server.close()
+
 
 if __name__ == "__main__":
     # get port number from arguments input
