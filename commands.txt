@@ -1,2 +1,1 @@
-client_get /index.html www.example.com 80
-client_post /submit www.example.com 80 name=John+Doe&email=john.doe%40example.com
+client_get /E:\CSED\photo.png localhost 80
