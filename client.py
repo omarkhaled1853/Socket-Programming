@@ -64,7 +64,6 @@ def create_http_get_request(filepath, host):
 
 def create_http_post_request(file_path, host):
     content_type = get_content_type_from_path(file_path)
-    print(content_type)
     if content_type == "unknown/unknown":
         raise ValueError("Invalid content type.")
 
@@ -86,30 +85,28 @@ def create_http_post_request(file_path, host):
 def main(input_file, host, port):
     # Use 'with' to automatically handle the socket closing
 
-    # with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
-    #     client_socket.connect((host, port))
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
+        client_socket.connect((host, port))
 
-    with open(input_file, "r") as file:
-        for line in file:
-            operation, file_path, _, _ = split_command(line)
+        with open(input_file, "r") as file:
+            for line in file:
+                operation, file_path, _, _ = split_command(line)
 
-            if operation == "client_get":
-                request = create_http_get_request(file_path, host)
-            elif operation == "client_post":
-                request = create_http_post_request(file_path, host)
+                if operation == "client_get":
+                    request = create_http_get_request(file_path, host)
+                elif operation == "client_post":
+                    request = create_http_post_request(file_path, host)
 
-            print(request)
+                client_socket.sendall(request)
+                response = client_socket.recv(1048576)
 
-            # client_socket.sendall(request)
-            # response = client_socket.recv(1048576)
-            #
-            # if operation == "client_get":
-            #     # print("Response from Get request: ", response.decode())
-            #     filename = os.path.basename(file_path)
-            #     save_file(filename, response)
-            #
-            # elif operation == "client_post":
-            #     print("Response from post request:", response.decode())
+                if operation == "client_get":
+                    # print("Response from Get request: ", response.decode())
+                    filename = os.path.basename(file_path)
+                    save_file(filename, response)
+
+                elif operation == "client_post":
+                    print("Response from post request:", response.decode())
 
 
 if __name__ == "__main__":

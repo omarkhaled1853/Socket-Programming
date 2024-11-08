@@ -1,2 +1,2 @@
-client_get /index.html www.example.com 80
-client_post /submit www.example.com 80 name=John+Doe&email=john.doe%40example.com
+client_post ASSEMBLY3.PNG www.example.com 80
+client_post myname.txt www.example.com 80
