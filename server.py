@@ -4,8 +4,9 @@ import os
 
 # Function to handle client POST request
 def handle_POST(path: str, data: str):
-    file_path = path.lstrip("/")  # Remove leading "/"
-    with open(file_path, "wb") as f:
+    # get file name
+    file_name = os.path.basename(path)
+    with open(file_name, "wb") as f:
         # Write data into the file
         f.write(data)
     # Send 200 OK response
