@@ -1,2 +1,3 @@
-client_post ASSEMBLY3.PNG www.example.com 80
-client_post myname.txt www.example.com 80
+client_post .\text.txt localhost 80
+client_post .\index.html localhost 80
+client_get E:\CSED\photo.jpeg localhost 80

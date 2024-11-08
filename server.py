@@ -7,6 +7,7 @@ import sys
 def handle_POST(path: str, data: str):
     # get file name
     file_name = os.path.basename(path)
+    print(file_name)
     with open(file_name, "wb") as f:
         # Write data into the file
         f.write(data)
@@ -34,27 +35,30 @@ def handle_client(client_socket: socket.socket, addr:tuple):
     try:
         while True:
             # Receive client messages
-            request = client_socket.recv(1048576).decode("utf-8", errors='ignore')
+            request = client_socket.recv(1048576)
 
             # Indecate close lient socket
             if not request:
                 break
+
+            # Split the request into headers and body
+            headers, body = request.split(b"\r\n\r\n", 1)
+            headers = headers.decode('utf-8')
             
-            print(f"Received: {request}")
+            # Now `body` contains the content after the blank line
+            print("Headers:\n", headers)
+            print("Body:\n", body)
             
             # Get request command
-            lines = request.splitlines()
+            lines = headers.splitlines()
             request_line = lines[0]
             method, path, _ = request_line.split()
-            
-            # Get data if the method is POST
-            data = lines[-1]
-            
+
             # Handle GET and POST requests
             if method == "GET":
                 response = handle_GET(path=path)
             elif method == "POST":
-                response = handle_POST(path=path, data=data)
+                response = handle_POST(path=path, data=body)
             
             # Send response to client
             client_socket.send(response)
