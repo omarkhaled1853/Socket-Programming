@@ -1,1 +1,0 @@
-client_get content\myname.txt localhost 80

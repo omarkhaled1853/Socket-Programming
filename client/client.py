@@ -92,7 +92,7 @@ def client_logic(client_socket, input_file, host):
 
             response = client_socket.recv(1048576)
 
-            headers, body = response.split(b"\r\n", 1)
+            headers, body = response.split(b"\r\n\r\n", 1)
             headers = headers.decode('utf-8')
 
             if operation == "client_get":
