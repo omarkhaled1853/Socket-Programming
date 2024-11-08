@@ -1,1 +1,2 @@
-client_get /E:\CSED\photo.png localhost 80
+client_post ASSEMBLY3.PNG www.example.com 80
+client_post myname.txt www.example.com 80

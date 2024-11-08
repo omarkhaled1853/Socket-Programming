@@ -1,6 +1,7 @@
 import socket
 import threading
 import os
+import sys
 
 # Function to handle client POST request
 def handle_POST(path: str, data: str):
@@ -86,3 +87,10 @@ def run_server(port = 8000):
         print(f"Error: {e}")
     finally:
         server.close()
+
+if __name__ == "__main__":
+    # get port number from arguments input
+    port = int(sys.argv[1]) # server port number
+
+    # run server
+    run_server(port=port)
