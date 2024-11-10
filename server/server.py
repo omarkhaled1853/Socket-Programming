@@ -2,6 +2,7 @@ import socket
 import threading
 import os
 import sys
+import mimetypes
 
 # Function to handle client POST request
 def handle_POST(path: str, data: str):
@@ -12,23 +13,36 @@ def handle_POST(path: str, data: str):
         # Write data into the file
         f.write(data)
     # Send 200 OK response
-    response = "HTTP/1.1 200 OK\r\n"
+    response = "HTTP/1.1 200 OK\r\n\r\n"
     return response.encode()
 
 # Function to handle client GET request
 def handle_GET(path: str):
     file_path = path.lstrip("/")  # Remove leading "/"
+    
     # Check if the file exists
     if os.path.exists(file_path) and os.path.isfile(file_path):
+        # Detect the MIME type and set the content type
+        mime_type, _ = mimetypes.guess_type(file_path)
+        mime_type = mime_type or "application/octet-stream"
+        
         # Read the file content
         with open(file_path, 'rb') as f:
             file_content = f.read()
-        # Send 200 OK response with file content
-        response = "HTTP/1.1 200 OK\r\n"
+        
+        # Create the HTTP response with Content-Length and Content-Type headers
+        response = (
+            f"HTTP/1.1 200 OK\r\n"
+            f"Content-Type: {mime_type}\r\n"
+            f"Content-Length: {len(file_content)}\r\n"
+            f"Connection: close\r\n\r\n"
+        )
+        
+        # Send the headers followed by the content
         return response.encode() + file_content
     else:
         # Send 404 Not Found response
-        response = "HTTP/1.1 404 Not Found\r\n\r\n"
+        response = "HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n"
         return response.encode()
 
 
