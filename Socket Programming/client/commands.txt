@@ -1,0 +1,3 @@
+client_post text.txt localhost 80
+client_post index.html localhost 80
+client_get photo.jpeg localhost 80
